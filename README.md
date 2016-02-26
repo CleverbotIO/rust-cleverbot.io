@@ -3,6 +3,7 @@
 TRAVIS HERE
 CRATES IO HERE
 -->
+[![build status](https://secure.travis-ci.org/CleverbotIO/rust-cleverbot.io.svg)](http://travis-ci.org/CleverbotIO/rust-cleverbot.io)
 [![Slack Status](https://slack.cleverbot.io/badge.svg)](https://slack.cleverbot.io)
 
 A Rust interface for Cleverbot.io.
