@@ -1,0 +1,15 @@
+[package]
+name = "cleverbot_io"
+version = "1.0.0"
+authors = ["Eli Clemente Gordillo Foster <elifosterwy@gmail.com>"]
+description = "A Rust interface for the cleverbot.io API"
+repository = "https://github.com/CleverbotIO/rust-cleverbot.io"
+keywords = ["cleverbot", "api", "AI"]
+readme = "README.md"
+license = "MIT"
+
+[dependencies]
+hyper = "*"
+url = "*"
+serde = "*"
+serde_json = "*"
