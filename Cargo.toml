@@ -2,6 +2,8 @@
 name = "cleverbot_io"
 version = "1.0.0"
 authors = ["Eli Clemente Gordillo Foster <elifosterwy@gmail.com>"]
+documentation = "https://docs.cleverbot.io/docs/getting-started-with-rust"
+homepage = "https://cleverbot.io/"
 description = "A Rust interface for the cleverbot.io API"
 repository = "https://github.com/CleverbotIO/rust-cleverbot.io"
 keywords = ["cleverbot", "api", "AI"]
@@ -9,7 +11,7 @@ readme = "README.md"
 license = "MIT"
 
 [dependencies]
-hyper = "*"
-url = "*"
-serde = "*"
-serde_json = "*"
+hyper = "0.7.2"
+url = "0.5.5"
+serde = "0.7.0"
+serde_json = "0.7.0"
