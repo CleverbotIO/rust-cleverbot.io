@@ -72,15 +72,14 @@ impl Cleverbot {
         match result.as_ref() {
             "success" => {
                 let json_nick = json.get("nick");
-                let nick = match json_nick {
-                    Some(nick) => nick,
-                    None => return Err(CleverbotError::MissingValue(String::from("nick")))
-                };
-                Ok(Cleverbot {
-                    user: user,
-                    key: key,
-                    nick: nick.to_string(),
-                })
+                match json_nick {
+                    Some(nick) => Ok(Cleverbot {
+                        user: user,
+                        key: key,
+                        nick: nick.to_string()
+                    }),
+                    None => Err(CleverbotError::MissingValue(String::from("nick"))),
+                }
             },
             "Error: API credentials incorrect" => Err(CleverbotError::IncorrectCredentials),
             "Error: reference name already exists" => Err(CleverbotError::DuplicatedReferenceNames),
@@ -98,9 +97,7 @@ impl Cleverbot {
             ("nick", &*self.nick),
             ("text", message),
         ];
-        let mut response = {
-            try!(request("https://cleverbot.io/1.0/ask", &*args))
-        };
+        let mut response = try!(request("https://cleverbot.io/1.0/ask", &*args));
         let mut body = String::new();
         try!(response.read_to_string(&mut body));
         let json: BTreeMap<String, String> = try!(serde_json::from_str(&body));
@@ -112,11 +109,10 @@ impl Cleverbot {
         match result.as_ref() {
             "success" => {
                 let json_response = json.get("response");
-                let response = match json_response {
-                    Some(response) => response,
-                    None => return Err(CleverbotError::MissingValue(String::from("nick"))),
-                };
-                Ok(response.to_string())
+                match json_response {
+                    Some(response) => Ok(response.to_string()),
+                    None => Err(CleverbotError::MissingValue(String::from("nick"))),
+                }
             },
             "Error: API credentials incorrect" => Err(CleverbotError::IncorrectCredentials),
             "Error: reference name already exists" => Err(CleverbotError::DuplicatedReferenceNames),
