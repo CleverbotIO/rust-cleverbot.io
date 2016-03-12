@@ -11,12 +11,7 @@ use url::form_urlencoded::{serialize};
 use std::io::Read;
 use std::io::Error;
 use std::collections::BTreeMap;
-
-pub struct Cleverbot {
-    user: String,
-    key: String,
-    pub nick: String,
-}
+use serde_json::error::Error as JsonError;
 
 #[derive(Debug)]
 pub enum CleverbotError {
@@ -25,6 +20,8 @@ pub enum CleverbotError {
     Io(HyperError),
     Api(String),
     Std(Error),
+    Json(JsonError),
+    MissingValue(String)
 }
 
 impl From<HyperError> for CleverbotError {
@@ -37,6 +34,18 @@ impl From<Error> for CleverbotError {
     fn from(err: Error) -> CleverbotError {
         CleverbotError::Std(err)
     }
+}
+
+impl From<JsonError> for CleverbotError {
+    fn from(err: JsonError) -> CleverbotError {
+        CleverbotError::Json(err)
+    }
+}
+
+pub struct Cleverbot {
+    user: String,
+    key: String,
+    pub nick: String,
 }
 
 impl Cleverbot {
@@ -57,17 +66,34 @@ impl Cleverbot {
         };
         let mut body = String::new();
         try!(response.read_to_string(&mut body));
-        let json: BTreeMap<String, String> = serde_json::from_str(&body).unwrap();
-        let result = json.get("status").unwrap();
+        let json: BTreeMap<String, String> = try!(serde_json::from_str(&body));
+        let opt_result = json.get("status");
+        let result = {
+            if let Some(opt_result) = opt_result {
+                opt_result.to_owned()
+            } else {
+                return Err(CleverbotError::MissingValue(String::from("status")));
+            }
+        };
         match result.as_ref() {
-            "success" => Ok(Cleverbot {
+            "success" => {
+                let json_nick = json.get("nick");
+                let nick = {
+                    if let Some(ref json_nick) = json_nick {
+                        json_nick
+                    } else {
+                        return Err(CleverbotError::MissingValue(String::from("nick")));
+                    }
+                };
+                Ok(Cleverbot {
                     user: user,
                     key: key,
-                    nick: json.get("nick").unwrap().to_string(),
-                }),
+                    nick: nick.to_string(),
+                })
+            },
             "Error: API credentials incorrect" => Err(CleverbotError::IncorrectCredentials),
             "Error: reference name already exists" => Err(CleverbotError::DuplicatedReferenceNames),
-            _ => Err(CleverbotError::Api(result.to_owned()))
+            _ => Err(CleverbotError::Api(result))
         }
     }
 
@@ -89,10 +115,27 @@ impl Cleverbot {
         };
         let mut body = String::new();
         try!(response.read_to_string(&mut body));
-        let json: BTreeMap<String, String> = serde_json::from_str(&body).unwrap();
-        let result = json.get("status").unwrap();
+        let json: BTreeMap<String, String> = try!(serde_json::from_str(&body));
+        let opt_result = json.get("status");
+        let result = {
+            if let Some(opt_result) = opt_result {
+                opt_result.to_owned()
+            } else {
+                return Err(CleverbotError::MissingValue(String::from("status")));
+            }
+        };
         match result.as_ref() {
-            "success" => Ok(json.get("response").unwrap().to_string()),
+            "success" => {
+                let json_response = json.get("response");
+                let response = {
+                    if let Some(ref json_response) = json_response {
+                        json_response
+                    } else {
+                        return Err(CleverbotError::MissingValue(String::from("nick")));
+                    }
+                };
+                Ok(response.to_string())
+            },
             "Error: API credentials incorrect" => Err(CleverbotError::IncorrectCredentials),
             "Error: reference name already exists" => Err(CleverbotError::DuplicatedReferenceNames),
             _ => Err(CleverbotError::Api(result.to_owned()))
