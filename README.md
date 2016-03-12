@@ -1,10 +1,10 @@
 # cleverbot.io
 <!--
-TRAVIS HERE
 CRATES IO HERE
 -->
 [![build status](https://secure.travis-ci.org/CleverbotIO/rust-cleverbot.io.svg)](http://travis-ci.org/CleverbotIO/rust-cleverbot.io)
 [![Slack Status](https://slack.cleverbot.io/badge.svg)](https://slack.cleverbot.io)
+[![Build Status](https://travis-ci.org/CleverbotIO/rust-cleverbot.io.svg?branch=master)](https://travis-ci.org/CleverbotIO/rust-cleverbot.io)
 
 A Rust interface for Cleverbot.io.
 

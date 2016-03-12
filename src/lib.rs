@@ -6,9 +6,41 @@ extern crate serde_json;
 use hyper::client::{Client};
 use hyper::header::{ContentType};
 use hyper::client::response::{Response};
+use hyper::error::Error as HyperError;
 use url::form_urlencoded::{serialize};
 use std::io::Read;
+use std::io::Error;
 use std::collections::BTreeMap;
+use serde_json::error::Error as JsonError;
+
+#[derive(Debug)]
+pub enum CleverbotError {
+    IncorrectCredentials,
+    DuplicatedReferenceNames,
+    Io(HyperError),
+    Api(String),
+    Std(Error),
+    Json(JsonError),
+    MissingValue(String)
+}
+
+impl From<HyperError> for CleverbotError {
+    fn from(err: HyperError) -> CleverbotError {
+        CleverbotError::Io(err)
+    }
+}
+
+impl From<Error> for CleverbotError {
+    fn from(err: Error) -> CleverbotError {
+        CleverbotError::Std(err)
+    }
+}
+
+impl From<JsonError> for CleverbotError {
+    fn from(err: JsonError) -> CleverbotError {
+        CleverbotError::Json(err)
+    }
+}
 
 pub struct Cleverbot {
     user: String,
@@ -20,49 +52,71 @@ impl Cleverbot {
     /// Creates a new Cleverbot instance.
     /// * `user` - The API User.
     /// * `key` - The API Key.
-    pub fn new(user: String, key: String, nick: Option<String>) -> Result<Cleverbot, String> {
+    pub fn new(user: String, key: String, nick: Option<String>) -> Result<Cleverbot, CleverbotError> {
         let mut response = {
             let mut args = vec![
                 ("user", &*user),
                 ("key", &*key),
             ];
-            if let Some(ref nick) = nick { args.push(("nick", &*nick)) }
-            request("https://cleverbot.io/1.0/create", &*args)
+            if let Some(ref nick) = nick { args.push(("nick", &*nick)) };
+            try!(request("https://cleverbot.io/1.0/create", &*args))
         };
         let mut body = String::new();
-        response.read_to_string(&mut body).unwrap();
-        let json: BTreeMap<String, String> = serde_json::from_str(&body).unwrap();
-        let result = json.get("status").unwrap();
-        if result == "success" {
-            Ok(Cleverbot {
-                user: user,
-                key: key,
-                nick: json.get("nick").unwrap().to_string(),
-            })
-        } else {
-            Err(result.to_string())
+        try!(response.read_to_string(&mut body));
+        let json: BTreeMap<String, String> = try!(serde_json::from_str(&body));
+        let opt_result = json.get("status");
+        let result = match opt_result {
+            Some(result) => result,
+            None => return Err(CleverbotError::MissingValue(String::from("status"))),
+        };
+        match result.as_ref() {
+            "success" => {
+                let json_nick = json.get("nick");
+                match json_nick {
+                    Some(nick) => Ok(Cleverbot {
+                        user: user,
+                        key: key,
+                        nick: nick.to_string()
+                    }),
+                    None => Err(CleverbotError::MissingValue(String::from("nick"))),
+                }
+            },
+            "Error: API credentials incorrect" => Err(CleverbotError::IncorrectCredentials),
+            "Error: reference name already exists" => Err(CleverbotError::DuplicatedReferenceNames),
+            _ => Err(CleverbotError::Api(result.to_owned()))
         }
     }
 
     /// Sends the bot a message and returns its response. If the nick is not set, it will
     /// set it randomly through set_nick_randomly. Returns its response or error string.
     /// * `message` - The message to send to the bot.
-    pub fn say(&mut self, message: &str) -> Result<String, String> {
+    pub fn say(&mut self, message: &str) -> Result<String, CleverbotError> {
         let args = vec![
             ("user", &*self.user),
             ("key", &*self.key),
             ("nick", &*self.nick),
             ("text", message),
         ];
-        let mut response = request("https://cleverbot.io/1.0/ask", &*args);
+        let mut response = try!(request("https://cleverbot.io/1.0/ask", &*args));
         let mut body = String::new();
-        response.read_to_string(&mut body).unwrap();
-        let json: BTreeMap<String, String> = serde_json::from_str(&body).unwrap();
-        let result = json.get("status").unwrap();
-        if result == "success" {
-            return Ok(json.get("response").unwrap().to_string());
-        } else {
-            return Err(result.to_string());
+        try!(response.read_to_string(&mut body));
+        let json: BTreeMap<String, String> = try!(serde_json::from_str(&body));
+        let opt_result = json.get("status");
+        let result = match opt_result {
+            Some(result) => result,
+            None => return Err(CleverbotError::MissingValue(String::from("status"))),
+        };
+        match result.as_ref() {
+            "success" => {
+                let json_response = json.get("response");
+                match json_response {
+                    Some(response) => Ok(response.to_string()),
+                    None => Err(CleverbotError::MissingValue(String::from("nick"))),
+                }
+            },
+            "Error: API credentials incorrect" => Err(CleverbotError::IncorrectCredentials),
+            "Error: reference name already exists" => Err(CleverbotError::DuplicatedReferenceNames),
+            _ => Err(CleverbotError::Api(result.to_owned()))
         }
     }
 }
@@ -70,12 +124,11 @@ impl Cleverbot {
 /// Submits a POST request to the URL with the given vec body.
 /// * `base` - The URL
 /// * `args` - A vector representing the request body.
-fn request(base: &str, args: &[(&str, &str)]) -> Response {
+fn request(base: &str, args: &[(&str, &str)]) -> Result<Response, HyperError> {
     let client = Client::new();
     let body = serialize(args.into_iter());
     client.post(base)
         .body(&body)
         .header(ContentType::form_url_encoded())
         .send()
-        .unwrap()
 }
