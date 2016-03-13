@@ -50,6 +50,7 @@ pub struct Cleverbot {
 
 impl Cleverbot {
     /// Creates a new Cleverbot instance.
+    ///
     /// * `user` - The API User.
     /// * `key` - The API Key.
     pub fn new(user: String, key: String, nick: Option<String>) -> Result<Cleverbot, CleverbotError> {
@@ -89,6 +90,7 @@ impl Cleverbot {
 
     /// Sends the bot a message and returns its response. If the nick is not set, it will
     /// set it randomly through set_nick_randomly. Returns its response or error string.
+    ///
     /// * `message` - The message to send to the bot.
     pub fn say(&mut self, message: &str) -> Result<String, CleverbotError> {
         let args = vec![
@@ -122,6 +124,7 @@ impl Cleverbot {
 }
 
 /// Submits a POST request to the URL with the given vec body.
+///
 /// * `base` - The URL
 /// * `args` - A vector representing the request body.
 fn request(base: &str, args: &[(&str, &str)]) -> Result<Response, HyperError> {
