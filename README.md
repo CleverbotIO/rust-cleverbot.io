@@ -22,14 +22,15 @@ extern crate cleverbot_io;
 use cleverbot_io::{Cleverbot};
 
 fn main() {
+    let api_user = String::from("YOUR_API_USER").to_owned();
+    let api_key = String::from("YOUR_API_KEY").to_owned();
+
     // Use an automatically generated reference nick by using None for the third parameter.
-    let mut bot = Cleverbot::new(String::from("YOUR_API_KEY"), String::from("YOUR_API_USER"), None);
-    // Print the bot's response to a greeting.
-    println!("{}", bot.say(&"Hello."));
+    let mut bot = Cleverbot::new(api_user, api_key, None).unwrap();
+    println!("{}", bot.say("Hello.").unwrap());
 
     // Or, set a nick using Some for the third parameter.
-    let mut bot1 = Cleverbot::new(String::from("YOUR_API_KEY"), String::from("YOUR_API_USER"), Some(String::from("Carlos")));
-    println!("{}", bot1.say(&"Why am I still talking to you?"));
+    let mut carlos = Cleverbot::new(api_user, api_key, Some(String::from("Carlos"))).unwrap();
+    println!("{}", carlos.say("Why am I still talking to you?").unwrap());
 }
-
 ```

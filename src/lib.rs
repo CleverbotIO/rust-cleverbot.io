@@ -53,6 +53,7 @@ impl Cleverbot {
     ///
     /// * `user` - The API User.
     /// * `key` - The API Key.
+    /// * `nick` - The reference nick, or None.
     pub fn new(user: String, key: String, nick: Option<String>) -> Result<Cleverbot, CleverbotError> {
         let mut response = {
             let mut args = vec![
