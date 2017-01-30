@@ -1,6 +1,6 @@
 [package]
 name = "cleverbot_io"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Eli Clemente Gordillo Foster <elifosterwy@gmail.com>"]
 documentation = "https://docs.cleverbot.io/docs/getting-started-with-rust"
 homepage = "https://cleverbot.io/"
