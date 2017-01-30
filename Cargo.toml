@@ -11,7 +11,9 @@ readme = "README.md"
 license = "MIT"
 
 [dependencies]
-hyper = "0.7.2"
-url = "0.5.5"
-serde = "0.7.0"
-serde_json = "0.7.0"
+hyper = "0.10"
+url = "1.4"
+serde = "0.9"
+serde_json = "0.9"
+hyper-native-tls = "0.2.1"
+lazy_static = "0.2"

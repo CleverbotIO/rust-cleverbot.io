@@ -2,16 +2,21 @@ extern crate hyper;
 extern crate url;
 extern crate serde;
 extern crate serde_json;
+extern crate hyper_native_tls;
+#[macro_use]
+extern crate lazy_static;
 
 use hyper::client::{Client};
 use hyper::header::{ContentType};
 use hyper::client::response::{Response};
 use hyper::error::Error as HyperError;
-use url::form_urlencoded::{serialize};
+use url::form_urlencoded::{Serializer};
 use std::io::Read;
 use std::io::Error;
 use std::collections::BTreeMap;
 use serde_json::error::Error as JsonError;
+use hyper::net::HttpsConnector;
+use hyper_native_tls::NativeTlsClient;
 
 #[derive(Debug)]
 pub enum CleverbotError {
@@ -46,6 +51,10 @@ pub struct Cleverbot {
     user: String,
     key: String,
     pub nick: String,
+}
+
+lazy_static! {
+    static ref CLIENT: Client = Client::with_connector(HttpsConnector::new(NativeTlsClient::new().unwrap()));
 }
 
 impl Cleverbot {
@@ -129,9 +138,12 @@ impl Cleverbot {
 /// * `base` - The URL
 /// * `args` - A vector representing the request body.
 fn request(base: &str, args: &[(&str, &str)]) -> Result<Response, HyperError> {
-    let client = Client::new();
-    let body = serialize(args.into_iter());
-    client.post(base)
+    let mut serializer = Serializer::new(String::new());
+    for pair in args {
+        serializer.append_pair(pair.0, pair.1);
+    }
+    let body = serializer.finish();
+    CLIENT.post(base)
         .body(&body)
         .header(ContentType::form_url_encoded())
         .send()
