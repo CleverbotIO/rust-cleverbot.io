@@ -7,6 +7,8 @@
 
 A Rust interface for Cleverbot.io.
 
+**Important**: For all I know, the cleverbot.io API does not work anymore. This crate, therefore, will not be maintained. Though this project is part of the Cleverbot IO project, I have nothing to do with and am not responsible for the maintenance of the Cleverbot IO API itself. The maintainer of the API has gone MIA. If your application still requires this crate, you should remove it.
+
 ## Installation
 This crate works with Cargo and can be found on crates.io with a `Cargo.toml` like:
 
